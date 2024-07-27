@@ -185,7 +185,7 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  texturesDirectoryPath: 
+  shapePredictorPath: shape_predictor_68_face_landmarks.dat
 --- !u!4 &129805889
 Transform:
   m_ObjectHideFlags: 0
@@ -215,11 +215,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   watermarkImagePosition: {x: 0, y: 4.7}
   watermarkImageScale: 0.25
-  watermarkImagePath: 
-  videoFileDirectoryPath: 
   frameRate: 20
   videoSpeed: 1
-  WaterMarkImage: {fileID: 2800000, guid: ce1d102ec06314747aa72e7df513aa0e, type: 3}
+  WaterMarkImage: {fileID: 2800000, guid: 8bd2eb20f63e2344bb7a9497b4d7fa2f, type: 3}
   videoPlayer: {fileID: 1997285206}
 --- !u!1 &705507993
 GameObject:
