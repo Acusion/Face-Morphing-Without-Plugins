@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 129805888}
   - component: {fileID: 129805890}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Morphing Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1048,8 +1048,8 @@ SceneRoots:
   m_Roots:
   - {fileID: 963194228}
   - {fileID: 705507995}
+  - {fileID: 1472270406}
+  - {fileID: 1098966659}
   - {fileID: 129805889}
   - {fileID: 1519905912}
   - {fileID: 1997285207}
-  - {fileID: 1472270406}
-  - {fileID: 1098966659}
