@@ -182,7 +182,7 @@ public class FaceMorphing : MonoBehaviour
                 try
                 {
                     // Perform the affine warp
-                    Imgproc.warpAffine(src, dst, warpMat, dst.size(), Imgproc.INTER_LINEAR, Core.BORDER_REFLECT_101);
+                    Imgproc.warpAffine(src, dst, warpMat, dst.size(), Imgproc.INTER_LINEAR, Core.BORDER_REFLECT_101); //in iOS it's crashing here
                 }
                 catch (Exception e)
                 {
