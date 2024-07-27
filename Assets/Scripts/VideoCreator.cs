@@ -11,9 +11,6 @@ public class VideoCreator : MonoBehaviour, IFFmpegCallbacksHandler
 
     public Vector2 watermarkImagePosition = new Vector2(0, 0);
     public float watermarkImageScale = 0.5f;
-    string framesDirectory;
-    public string watermarkImagePath;
-    public string videoFileDirectoryPath;
     [SerializeField] int frameRate = 20;
     [SerializeField] int videoSpeed = 1;
     public List<IFFmpegCallbacksHandler> _callbacksHandlers;
@@ -21,42 +18,21 @@ public class VideoCreator : MonoBehaviour, IFFmpegCallbacksHandler
 
     [SerializeField] VideoPlayer videoPlayer;
 
-    string videoFileFullPath => Path.Combine(videoFileDirectoryPath, "MorphingOutput.mp4");
+    string videoFileFullPath => Path.Combine(Paths.RESULTS_PATH, "MorphingOutput.mp4");
+
     private void Awake()
     {
-        ValidatePaths();
         videoPlayer.targetTexture.Release();
     }
 
     private void Start()
     {
         _callbacksHandlers = new List<IFFmpegCallbacksHandler> { this };
-
-        string framePath = Path.Combine(framesDirectory, $"frame_{frameCount.ToString("d4")}.png");
-        Debug.Log($"Frame saved at {framePath}  {IsValidPng(framePath)}");
-    }
-
-    private void ValidatePaths()
-    {
-        framesDirectory = Path.Combine(Application.persistentDataPath, "PatientImages", "PatientId", "Temp", "frames");
-        videoFileDirectoryPath = Path.Combine(Application.persistentDataPath, "PatientImages", "PatientId", "Results");
-
-        if (!Directory.Exists(framesDirectory))
-        {
-            Directory.CreateDirectory(framesDirectory);
-        }
-
-        if (!Directory.Exists(videoFileDirectoryPath))
-        {
-            Directory.CreateDirectory(videoFileDirectoryPath);
-        }
     }
 
     public void OnFrameCreated(byte[] imageData)
     {
-        ValidatePaths();
-
-        string framePath = Path.Combine(framesDirectory, $"frame_{frameCount.ToString("d4")}.png");
+        string framePath = Path.Combine(Paths.FRAMES_PATH, $"frame_{frameCount.ToString("d4")}.png");
         File.WriteAllBytes(framePath, imageData);
         frameCount++;
     }
@@ -78,17 +54,12 @@ public class VideoCreator : MonoBehaviour, IFFmpegCallbacksHandler
     [ContextMenu("Create Video")]
     public void OnMorphongCompleted()
     {
-        ValidatePaths();
+        string framePathFormat = Path.Combine(Paths.FRAMES_PATH, "frame_%04d.png");
 
-        string framePathFormat = Path.Combine(framesDirectory, "frame_%04d.png");
-        watermarkImagePath = Path.Combine(Application.persistentDataPath, "WaterMark.png");
+        if (!File.Exists(Paths.WATERMARK_IMAGE_PATH))
+            SaveImageToPersistentPath(WaterMarkImage, Paths.WATERMARK_IMAGE_PATH);
 
-        var videoFileName = Path.Combine(videoFileDirectoryPath, "MorphingOutput.mp4");
-
-        if (!File.Exists(watermarkImagePath))
-            SaveImageToPersistentPath(WaterMarkImage);
-
-        var imagesToVideoCommandWatermark = new ImagesToVideoWithWatermark(framePathFormat, watermarkImagePath, videoFileName, frameRate, CRF.MAX_QUALITY, watermarkImagePosition, watermarkImageScale, videoSpeed);
+        var imagesToVideoCommandWatermark = new ImagesToVideoWithWatermark(framePathFormat, Paths.WATERMARK_IMAGE_PATH, videoFileFullPath, frameRate, CRF.MAX_QUALITY, watermarkImagePosition, watermarkImageScale, videoSpeed);
         FFmpeg.Execute(imagesToVideoCommandWatermark.ToString(), _callbacksHandlers);
     }
 
@@ -133,10 +104,8 @@ public class VideoCreator : MonoBehaviour, IFFmpegCallbacksHandler
 
     public void Save()
     {
-        var videoFileName = Path.Combine(videoFileDirectoryPath, "MorphingOutput.mp4");
-
-        if (File.Exists(videoFileName))
-            DownloadOrSaveVideo(videoFileName);
+        if (File.Exists(videoFileFullPath))
+            DownloadOrSaveVideo(videoFileFullPath);
     }
 
     public void DownloadOrSaveVideo(string fullPath)
@@ -166,7 +135,7 @@ public class VideoCreator : MonoBehaviour, IFFmpegCallbacksHandler
 
     }
 
-    private void SaveImageToPersistentPath(Texture2D imageToSave)
+    private void SaveImageToPersistentPath(Texture2D imageToSave, string path)
     {
         if (imageToSave == null)
         {
@@ -177,12 +146,7 @@ public class VideoCreator : MonoBehaviour, IFFmpegCallbacksHandler
         // Convert the Texture2D to a byte array
         byte[] bytes = imageToSave.EncodeToPNG();
 
-        // Specify the file path
-        string filePath = Path.Combine(Application.persistentDataPath, "WaterMark.png");
-
         // Write the bytes to the file
-        File.WriteAllBytes(filePath, bytes);
-
-        Debug.Log("WaterMark image saved to: " + filePath);
+        File.WriteAllBytes(path, bytes);
     }
 }

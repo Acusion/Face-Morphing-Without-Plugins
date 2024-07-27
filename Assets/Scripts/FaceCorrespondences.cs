@@ -11,79 +11,85 @@ using OpenCVForUnity.UnityUtils;
 
 public class FaceCorrespondences
 {
-    public string shapePredictorPath = "Assets/shape_predictor_68_face_landmarks.dat";
-    private FaceLandmarkDetector faceLandmarkDetector;
-
-    public Tuple<Size, Mat, Mat, List<Point>, List<Point>, List<Point>> GenerateFaceCorrespondences(Mat theImage1, Mat theImage2)
+    public Tuple<Size, Mat, Mat, List<Point>, List<Point>, List<Point>> GenerateFaceCorrespondences(Mat theImage1, Mat theImage2, FaceLandmarkDetector faceLandmarkDetector)
     {
-        var faceLandmarkDetector = new FaceLandmarkDetector(shapePredictorPath);
-        var corresp = new Mat(68, 2, CvType.CV_64FC1);
-
-        var tempImgList = CropImage(theImage1, theImage2);
-
-        var imgList = new List<Mat>() { tempImgList.Item1, tempImgList.Item2 };
-
-        var list1 = new List<Point>();
-        var list2 = new List<Point>();
-        var list3 = new List<Point>();
-        int j = 1;
-
-        foreach (var img in imgList)
+        using (Mat corresp = new Mat(68, 2, CvType.CV_64FC1))
         {
-            var size = img.size();
-            List<Point> currList = (j == 1) ? list1 : list2;
 
-            // Detect faces in the image
-            faceLandmarkDetector.SetImage(img.ToTexture2D());
+            var tempImgList = CropImage(theImage1, theImage2);
 
-            var faceRects = faceLandmarkDetector.Detect();
+            var imgList = new List<Mat>() { tempImgList.Item1, tempImgList.Item2 };
 
-            if (faceRects.Count == 0)
+            var list1 = new List<Point>();
+            var list2 = new List<Point>();
+            var list3 = new List<Point>();
+            int j = 1;
+
+            foreach (var img in imgList)
             {
-                Debug.LogError("Sorry, but I couldn't find a face in the image.");
-                continue;
-            }
+                var size = img.size();
+                List<Point> currList = (j == 1) ? list1 : list2;
 
-            j++;
+                // Detect faces in the image
+                faceLandmarkDetector.SetImage(img.ToTexture2D());
 
-            foreach (var rect in faceRects)
-            {
-                var points = faceLandmarkDetector.DetectLandmark(rect);
+                var faceRects = faceLandmarkDetector.Detect();
 
-                for (int i = 0; i < 68; i++)
+                if (faceRects == null || faceRects.Count == 0)
                 {
-                    var point = points[i];
-                    int x = Mathf.CeilToInt(point.x);
-                    int y = Mathf.CeilToInt(point.y);
-                    currList.Add(new Point(x, y));
-                    corresp.put(i, 0, corresp.get(i, 0)[0] + x);
-                    corresp.put(i, 1, corresp.get(i, 1)[0] + y);
+                    Debug.LogError("No faces detected in the image.");
+                    continue; // Skip to the next image
                 }
 
-                // Add back the background
-                currList.Add(new Point(1, 1));
-                currList.Add(new Point(size.width - 1, 1));
-                currList.Add(new Point((size.width - 1) / 2, 1));
-                currList.Add(new Point(1, size.height - 1));
-                currList.Add(new Point(1, (size.height - 1) / 2));
-                currList.Add(new Point((size.width - 1) / 2, size.height - 1));
-                currList.Add(new Point(size.width - 1, size.height - 1));
-                currList.Add(new Point(size.width - 1, (size.height - 1) / 2));
+                j++;
+
+                foreach (var rect in faceRects)
+                {
+                    var points = faceLandmarkDetector.DetectLandmark(rect);
+
+                    if (points == null || points.Count == 0)
+                    {
+                        Debug.LogError("No landmarks detected for the face.");
+                        continue; // Skip processing if no landmarks are found
+                    }
+
+                    for (int i = 0; i < 68; i++)
+                    {
+                        var point = points[i];
+                        int x = Mathf.CeilToInt(point.x);
+                        int y = Mathf.CeilToInt(point.y);
+                        currList.Add(new Point(x, y));
+                        corresp.put(i, 0, corresp.get(i, 0)[0] + x);
+                        corresp.put(i, 1, corresp.get(i, 1)[0] + y);
+                    }
+
+                    // Add back the background
+                    currList.Add(new Point(1, 1));
+                    currList.Add(new Point(size.width - 1, 1));
+                    currList.Add(new Point((size.width - 1) / 2, 1));
+                    currList.Add(new Point(1, size.height - 1));
+                    currList.Add(new Point(1, (size.height - 1) / 2));
+                    currList.Add(new Point((size.width - 1) / 2, size.height - 1));
+                    currList.Add(new Point(size.width - 1, size.height - 1));
+                    currList.Add(new Point(size.width - 1, (size.height - 1) / 2));
+                }
+
+                Debug.Log("Face detected in image " + j);
             }
+
+            // Average the landmark points
+            for (int i = 0; i < 68; i++)
+            {
+                double avgX = corresp.get(i, 0)[0] / 2;
+                double avgY = corresp.get(i, 1)[0] / 2;
+                list3.Add(new Point(avgX, avgY));
+            }
+
+            // Add back the background
+            AddBackgroundPoints(list3, theImage1.size());
+
+            return new Tuple<Size, Mat, Mat, List<Point>, List<Point>, List<Point>>(theImage1.size(), tempImgList.Item1, tempImgList.Item2, list1, list2, list3);
         }
-
-        // Average the landmark points
-        for (int i = 0; i < 68; i++)
-        {
-            double avgX = corresp.get(i, 0)[0] / 2;
-            double avgY = corresp.get(i, 1)[0] / 2;
-            list3.Add(new Point(avgX, avgY));
-        }
-
-        // Add back the background
-        AddBackgroundPoints(list3, theImage1.size());
-
-        return new Tuple<Size, Mat, Mat, List<Point>, List<Point>, List<Point>>(theImage1.size(), tempImgList.Item1, tempImgList.Item2, list1, list2, list3);
     }
 
     private static void AddBackgroundPoints(List<Point> list, Size size)
@@ -123,13 +129,15 @@ public class FaceCorrespondences
             double scale0 = (double)size1.height / size2.height;
             double scale1 = (double)size1.width / size2.width;
 
-            Mat resizedImg = new Mat();
-            if (scale0 > scale1)
-                Imgproc.resize(img2, resizedImg, new Size(0, 0), scale0, scale0, Imgproc.INTER_AREA);
-            else
-                Imgproc.resize(img2, resizedImg, new Size(0, 0), scale1, scale1, Imgproc.INTER_AREA);
+            using (Mat resizedImg = new Mat())
+            {
+                if (scale0 > scale1)
+                    Imgproc.resize(img2, resizedImg, new Size(0, 0), scale0, scale0, Imgproc.INTER_AREA);
+                else
+                    Imgproc.resize(img2, resizedImg, new Size(0, 0), scale1, scale1, Imgproc.INTER_AREA);
 
-            return CropImageHelp(img1, resizedImg);
+                return CropImageHelp(img1, resizedImg);
+            }
         }
 
         if (size1.height >= size2.height && size1.width >= size2.width)
@@ -137,13 +145,15 @@ public class FaceCorrespondences
             double scale0 = (double)size2.height / size1.height;
             double scale1 = (double)size2.width / size1.width;
 
-            Mat resizedImg = new Mat();
-            if (scale0 > scale1)
-                Imgproc.resize(img1, resizedImg, new Size(0, 0), scale0, scale0, Imgproc.INTER_AREA);
-            else
-                Imgproc.resize(img1, resizedImg, new Size(0, 0), scale1, scale1, Imgproc.INTER_AREA);
+            using (Mat resizedImg = new Mat())
+            {
+                if (scale0 > scale1)
+                    Imgproc.resize(img1, resizedImg, new Size(0, 0), scale0, scale0, Imgproc.INTER_AREA);
+                else
+                    Imgproc.resize(img1, resizedImg, new Size(0, 0), scale1, scale1, Imgproc.INTER_AREA);
 
-            return CropImageHelp(resizedImg, img2);
+                return CropImageHelp(resizedImg, img2);
+            }
         }
 
         if (size1Height >= size2Height && size1Width <= size2Width)
@@ -151,18 +161,24 @@ public class FaceCorrespondences
             // img1 height needs cropping, img2 width needs cropping
             Rect cropRect1 = new Rect(0, diff0, size1Width, avg0 - diff0);
             Rect cropRect2 = new Rect(Mathf.Abs(diff1), 0, avg1 - Mathf.Abs(diff1), size2Height);
-            Mat croppedImg1 = new Mat(img1, cropRect1);
-            Mat croppedImg2 = new Mat(img2, cropRect2);
-            return new Tuple<Mat, Mat>(croppedImg1, croppedImg2);
+
+            using (Mat croppedImg1 = new Mat(img1, cropRect1))
+            using (Mat croppedImg2 = new Mat(img2, cropRect2))
+            {
+                return new Tuple<Mat, Mat>(croppedImg1, croppedImg2);
+            }
         }
         else
         {
             // img1 width needs cropping, img2 height needs cropping
             Rect cropRect1 = new Rect(diff1, 0, avg1 - diff1, size1Height);
             Rect cropRect2 = new Rect(0, Mathf.Abs(diff0), size2Width, avg0 - Mathf.Abs(diff0));
-            Mat croppedImg1 = new Mat(img1, cropRect1);
-            Mat croppedImg2 = new Mat(img2, cropRect2);
-            return new Tuple<Mat, Mat>(croppedImg1, croppedImg2);
+
+            using (Mat croppedImg1 = new Mat(img1, cropRect1))
+            using (Mat croppedImg2 = new Mat(img2, cropRect2))
+            {
+                return new Tuple<Mat, Mat>(croppedImg1, croppedImg2);
+            }
         }
     }
 
@@ -202,37 +218,46 @@ public class FaceCorrespondences
         {
             // img2 needs cropping
             Rect cropRect = new Rect(Mathf.Abs(diff1), Mathf.Abs(diff0), avg1 - Mathf.Abs(diff1), avg0 - Mathf.Abs(diff0));
-            Mat croppedImg2 = new Mat(img2, cropRect);
-            return new Tuple<Mat, Mat>(img1, croppedImg2);
+            using (Mat croppedImg2 = new Mat(img2, cropRect))
+            {
+                return new Tuple<Mat, Mat>(img1, croppedImg2);
+            }
         }
         else if (size1Height >= size2Height && size1Width >= size2Width)
         {
             // img1 needs cropping
             Rect cropRect = new Rect(diff1, diff0, avg1 - diff1, avg0 - diff0);
-            Mat croppedImg1 = new Mat(img1, cropRect);
-            return new Tuple<Mat, Mat>(croppedImg1, img2);
+            using (Mat croppedImg1 = new Mat(img1, cropRect))
+            {
+                return new Tuple<Mat, Mat>(croppedImg1, img2);
+            }
         }
         else if (size1Height >= size2Height && size1Width <= size2Width)
         {
             // img1 height needs cropping, img2 width needs cropping
             Rect cropRect1 = new Rect(0, diff0, size1Width, avg0 - diff0);
             Rect cropRect2 = new Rect(Mathf.Abs(diff1), 0, avg1 - Mathf.Abs(diff1), size2Height);
-            Mat croppedImg1 = new Mat(img1, cropRect1);
-            Mat croppedImg2 = new Mat(img2, cropRect2);
-            return new Tuple<Mat, Mat>(croppedImg1, croppedImg2);
+            using (Mat croppedImg1 = new Mat(img1, cropRect1))
+            using (Mat croppedImg2 = new Mat(img2, cropRect2))
+            {
+                return new Tuple<Mat, Mat>(croppedImg1, croppedImg2);
+            }
         }
         else
         {
             // img1 width needs cropping, img2 height needs cropping
             Rect cropRect1 = new Rect(diff1, 0, avg1 - diff1, size1Height);
             Rect cropRect2 = new Rect(0, Mathf.Abs(diff0), size2Width, avg0 - Mathf.Abs(diff0));
-            Mat croppedImg1 = new Mat(img1, cropRect1);
-            Mat croppedImg2 = new Mat(img2, cropRect2);
-            return new Tuple<Mat, Mat>(croppedImg1, croppedImg2);
+            using (Mat croppedImg1 = new Mat(img1, cropRect1))
+            using (Mat croppedImg2 = new Mat(img2, cropRect2))
+            {
+                return new Tuple<Mat, Mat>(croppedImg1, croppedImg2);
+            }
         }
     }
 
     #region Json Version
+    /*
     [Serializable]
     public class Coordinate
     {
@@ -342,5 +367,6 @@ public class FaceCorrespondences
 
         return new Tuple<Size, Mat, Mat, List<Point>, List<Point>, List<Point>>(theImage1.size(), tempImgList.Item1, tempImgList.Item2, point1list, point2list, list3List);
     }
+    */
     #endregion
 }

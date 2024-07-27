@@ -21,42 +21,35 @@ public class DelaunayTriangulation
     {
         List<(int, int, int)> list4 = new List<(int, int, int)>();
 
-        MatOfFloat6 triangleList = new MatOfFloat6();
-        subdiv.getTriangleList(triangleList);
-
-        float[] triangles = triangleList.toArray();
-        Rect rect = new Rect(0, 0, f_w, f_h);
-        //Debug.Log($"Rect:- {rect}");
-
-        string debugStr = "";
-        for (int i = 0; i < triangles.Length; i += 6)
+        using (MatOfFloat6 triangleList = new MatOfFloat6())
         {
-            Point pt1 = new Point(triangles[i], triangles[i + 1]);
-            Point pt2 = new Point(triangles[i + 2], triangles[i + 3]);
-            Point pt3 = new Point(triangles[i + 4], triangles[i + 5]);
+            subdiv.getTriangleList(triangleList);
 
-            //Debug.Log($"Triangle points {i}:- {pt1}, {pt2}, {pt3}");
+            float[] triangles = triangleList.toArray();
+            Rect rect = new Rect(0, 0, f_w, f_h);
 
-            if (RectContains(rect, pt1) && RectContains(rect, pt2) && RectContains(rect, pt3))
+            for (int i = 0; i < triangles.Length; i += 6)
             {
-                // Convert points to strings for dictionary lookup
-                string pt1Str = $"{pt1.x},{pt1.y}";
-                string pt2Str = $"{pt2.x},{pt2.y}";
-                string pt3Str = $"{pt3.x},{pt3.y}";
+                Point pt1 = new Point(triangles[i], triangles[i + 1]);
+                Point pt2 = new Point(triangles[i + 2], triangles[i + 3]);
+                Point pt3 = new Point(triangles[i + 4], triangles[i + 5]);
 
-                //Debug.Log($"Added Triangle points {i}:- {pt1Str},     {pt2Str},   {pt3Str}");
-
-                // Ensure points are found in the dictionary
-                if (dictionary1.ContainsKey(pt1Str) && dictionary1.ContainsKey(pt2Str) && dictionary1.ContainsKey(pt3Str))
+                if (RectContains(rect, pt1) && RectContains(rect, pt2) && RectContains(rect, pt3))
                 {
-                    list4.Add((dictionary1[pt1Str], dictionary1[pt2Str], dictionary1[pt3Str]));
-                    //Debug.Log($"Added triangle indices {i}:- {dictionary1[pt1Str]}, {dictionary1[pt2Str]}, {dictionary1[pt3Str]}");
-                    //debugStr += $"Added triangle indices {i}:-              {dictionary1[pt1Str]}, {dictionary1[pt2Str]}, {dictionary1[pt3Str]}\n";
+                    // Convert points to strings for dictionary lookup
+                    string pt1Str = $"{pt1.x},{pt1.y}";
+                    string pt2Str = $"{pt2.x},{pt2.y}";
+                    string pt3Str = $"{pt3.x},{pt3.y}";
+
+                    // Ensure points are found in the dictionary
+                    if (dictionary1.ContainsKey(pt1Str) && dictionary1.ContainsKey(pt2Str) && dictionary1.ContainsKey(pt3Str))
+                    {
+                        list4.Add((dictionary1[pt1Str], dictionary1[pt2Str], dictionary1[pt3Str]));
+                    }
                 }
             }
         }
 
-        //Debug.Log(debugStr);
         dictionary1.Clear();
         return list4;
     }
@@ -85,18 +78,11 @@ public class DelaunayTriangulation
             dictionary[pointStr] = i;
         }
 
-        int x=0;
-        string debugStr = "";
         // Insert points into subdiv
         foreach (Point p in points)
         {
             subdiv.insert(p);
-            //Debug.Log($"Inserted point {x}:- {p.x}, {p.y}");
-            debugStr += $"Inserted point {x}:-              {p.x}, {p.y}\n";
-            x++;
         }
-
-        //Debug.Log(debugStr);
 
         // Make a Delaunay triangulation list.
         List<(int, int, int)> list4 = DrawDelaunay(f_w, f_h, subdiv, dictionary);
@@ -106,6 +92,7 @@ public class DelaunayTriangulation
     }
 
     #region To Read points from a JSON file
+    /*
     [Serializable]
     public class DataTuple
     {
@@ -134,5 +121,6 @@ public class DelaunayTriangulation
 
         return list4;
     }
+    */
     #endregion
 }

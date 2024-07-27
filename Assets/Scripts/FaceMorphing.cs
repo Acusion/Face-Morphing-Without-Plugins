@@ -11,21 +11,49 @@ using Rect = OpenCVForUnity.CoreModule.Rect;
 using OpenCVForUnity.UnityUtils;
 using Debug = UnityEngine.Debug;
 using UnityEngine.Events;
+using DlibFaceLandmarkDetector;
 
 public class FaceMorphing : MonoBehaviour
 {
     [SerializeField] List<Texture2D> inputImages;
     [SerializeField] UnityEvent<byte[]> onFrameCreated;
     [SerializeField] UnityEvent onMorphingCompleted;
-    public string texturesDirectoryPath;
 
-    private void Awake()
+    public string shapePredictorPath = "shape_predictor_68_face_landmarks.dat";
+    private FaceLandmarkDetector faceLandmarkDetector;
+
+    private bool InitializeFaceLandmarkDetector()
     {
-        texturesDirectoryPath = Path.Combine(Application.persistentDataPath, "PatientImages", "PatientId", "BG_Removed_Images");
+        string predictorPath = Utils.getFilePath(shapePredictorPath);
+        if (string.IsNullOrEmpty(predictorPath))
+        {
+            Debug.LogError("Shape predictor path is invalid or file does not exist.");
+            return false;
+        }
+
+        faceLandmarkDetector = new FaceLandmarkDetector(predictorPath);
+
+        if (faceLandmarkDetector == null)
+        {
+            Debug.LogError("Failed to initialize FaceLandmarkDetector.");
+            return false;
+        }
+
+        Debug.Log("FaceLandmarkDetector initialized successfully.");
+        return true;
     }
 
+
+    #region Morphing from Texture2D 
+    //Will be called from scene button.
     public void DoMorphingTextures2D()
     {
+        if (!InitializeFaceLandmarkDetector())
+        {
+            Debug.LogError("Failed to initialize FaceLandmarkDetector.");
+            return;
+        }
+
         for (int i = 0; i < inputImages.Count - 1; i++)
         {
             Texture2D path1 = inputImages[i];
@@ -39,7 +67,7 @@ public class FaceMorphing : MonoBehaviour
         onMorphingCompleted.Invoke();
     }
 
-    public void DoMorphing(Texture2D path1, Texture2D path2)
+    private void DoMorphing(Texture2D path1, Texture2D path2)
     {
         FaceCorrespondences faceCorrespondences = new FaceCorrespondences();
 
@@ -49,21 +77,29 @@ public class FaceMorphing : MonoBehaviour
         Mat imgMat2 = new Mat(path2.height, path2.width, CvType.CV_8UC3);
         Utils.texture2DToMat(path2, imgMat2);
 
-        (Size size, Mat img1, Mat img2, List<Point> points1, List<Point> points2, List<Point> triList) = faceCorrespondences.GenerateFaceCorrespondences(imgMat1, imgMat2);
+        (Size size, Mat img1, Mat img2, List<Point> points1, List<Point> points2, List<Point> triList) = faceCorrespondences.GenerateFaceCorrespondences(imgMat1, imgMat2, faceLandmarkDetector);
 
         var tri = new DelaunayTriangulation().MakeDelaunay((int)size.width, (int)size.height, triList, img1, img2);
         //var tri = new DelaunayTriangulation().MakeDelaunay(jsonDelaunay.text);
 
         GenerateMorphSequence(5, 20, img1, img2, points1, points2, tri, size);
     }
+    #endregion
 
+    #region Morphing From Paths
     [ContextMenu("DoMorphing")]
     public void DoMorphing()
     {
+        if (!InitializeFaceLandmarkDetector())
+        {
+            Debug.LogError("Failed to initialize FaceLandmarkDetector.");
+            return;
+        }
+
         var framesDirectory = Path.Combine(Application.persistentDataPath, "PatientImages", "PatientId", "Temp", "frames");
         framesDirectory.ResetDirectory();
 
-        string[] imagePaths = Directory.GetFiles(texturesDirectoryPath, "*.png");
+        string[] imagePaths = Directory.GetFiles(Paths.ALIGNED_IMAGES_PATH, "*.png");
 
         for (int i = 0; i < imagePaths.Length - 1; i++)
         {
@@ -78,20 +114,21 @@ public class FaceMorphing : MonoBehaviour
         onMorphingCompleted.Invoke();
     }
 
-    public void DoMorphing(string path1, string path2)
+    private void DoMorphing(string path1, string path2)
     {
         FaceCorrespondences faceCorrespondences = new FaceCorrespondences();
 
         Mat imgMat1 = Imgcodecs.imread(path1);
         Mat imgMat2 = Imgcodecs.imread(path2);
 
-        (Size size, Mat img1, Mat img2, List<Point> points1, List<Point> points2, List<Point> triList) = faceCorrespondences.GenerateFaceCorrespondences(imgMat1, imgMat2);
+        (Size size, Mat img1, Mat img2, List<Point> points1, List<Point> points2, List<Point> triList) = faceCorrespondences.GenerateFaceCorrespondences(imgMat1, imgMat2, faceLandmarkDetector);
 
         var tri = new DelaunayTriangulation().MakeDelaunay((int)size.width, (int)size.height, triList, img1, img2);
         //var tri = new DelaunayTriangulation().MakeDelaunay(jsonDelaunay.text);
 
         GenerateMorphSequence(5, 20, img1, img2, points1, points2, tri, size);
     }
+    #endregion
 
     private Mat ApplyAffineTransform(Mat src, List<Point> srcTri, List<Point> dstTri, Size size)
     {
