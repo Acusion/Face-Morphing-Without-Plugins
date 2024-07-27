@@ -9,6 +9,12 @@ Assets/AssetStoreTools*
 Assets/Local Files/
 Assets/Local Files.meta
 
+Assets/DlibFaceLandmarkDetector/
+Assets/DlibFaceLandmarkDetector.meta
+
+Assets/OpenCVForUnity/
+Assets/OpenCVForUnity.meta
+
 # Visual Studio cache directory
 .vs/
 .vscode/
