@@ -90,37 +90,4 @@ public class DelaunayTriangulation
         // Return the list.
         return list4.ConvertAll(x => new Tuple<int, int, int>(x.Item1, x.Item2, x.Item3));
     }
-
-    #region To Read points from a JSON file
-    /*
-    [Serializable]
-    public class DataTuple
-    {
-        public int a;
-        public int b;
-        public int c;
-    }
-
-    [Serializable]
-    public class DataContainer
-    {
-        public List<DataTuple> data;
-    }
-
-    public List<Tuple<int, int, int>> MakeDelaunay(string jsonString)
-    {
-        DataContainer dataContainer = JsonUtility.FromJson<DataContainer>(jsonString);
-
-        List<Tuple<int, int, int>> list4 = new List<Tuple<int, int, int>>();
-        // Access and print the parsed data
-        foreach (DataTuple tuple in dataContainer.data)
-        {
-            list4.Add(new Tuple<int, int, int>(tuple.a, tuple.b, tuple.c));
-            //Debug.Log($"Added triangle indices:- {tuple.a}, {tuple.b}, {tuple.c}");
-        }
-
-        return list4;
-    }
-    */
-    #endregion
 }

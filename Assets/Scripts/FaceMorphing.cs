@@ -137,12 +137,65 @@ public class FaceMorphing : MonoBehaviour
     }
     #endregion
 
+    //private Mat ApplyAffineTransform(Mat src, List<Point> srcTri, List<Point> dstTri, Size size)
+    //{
+    //    Mat warpMat = Imgproc.getAffineTransform(new MatOfPoint2f(srcTri.ToArray()), new MatOfPoint2f(dstTri.ToArray()));
+    //    Mat dst = new Mat(size, src.type());
+    //    Imgproc.warpAffine(src, dst, warpMat, size, Imgproc.INTER_LINEAR, Core.BORDER_REFLECT_101);
+    //    return dst;
+    //}
+
     private Mat ApplyAffineTransform(Mat src, List<Point> srcTri, List<Point> dstTri, Size size)
     {
-        Mat warpMat = Imgproc.getAffineTransform(new MatOfPoint2f(srcTri.ToArray()), new MatOfPoint2f(dstTri.ToArray()));
-        Mat dst = new Mat(size, src.type());
-        Imgproc.warpAffine(src, dst, warpMat, size, Imgproc.INTER_LINEAR, Core.BORDER_REFLECT_101);
-        return dst;
+        //return ApplyAffineTransformManual(src, Imgproc.getAffineTransform(new MatOfPoint2f(srcTri.ToArray()), new MatOfPoint2f(dstTri.ToArray())), size);
+
+        // Check for valid input Mat and points
+        if (src.empty() || srcTri.Count != 3 || dstTri.Count != 3)
+        {
+            Debug.LogError("Invalid input data for ApplyAffineTransform.");
+            return null;
+        }
+
+        using (MatOfPoint2f srcMat = new MatOfPoint2f(srcTri.ToArray()))
+        using (MatOfPoint2f dstMat = new MatOfPoint2f(dstTri.ToArray()))
+        {
+            // Compute the affine transform
+            using (Mat warpMat = Imgproc.getAffineTransform(srcMat, dstMat))
+            {
+                //Debug.Log("warpMat contents: " + warpMat.dump());
+                // Ensure warpMat is not empty
+                if (warpMat.empty())
+                {
+                    Debug.LogError("Failed to calculate affine transform.");
+                    return null;
+                }
+
+                // Create the destination Mat with the specified size and same type as source
+                Mat dst = new Mat(size, src.type());
+
+                if (dst.empty())
+                {
+                    Debug.LogError("Failed to create destination Mat.");
+                    return null;
+                }
+
+                try
+                {
+                    // Perform the affine warp
+                    Imgproc.warpAffine(src, dst, warpMat, dst.size(), Imgproc.INTER_LINEAR, Core.BORDER_REFLECT_101);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Exception in warpAffine: {e.Message}");
+                    dst.release(); // Release the destination Mat in case of failure
+                    return null;
+                }
+
+                src.release();
+                warpMat.release();
+                return dst;
+            }
+        }
     }
 
     public void MorphTriangle(Mat img1, Mat img2, Mat img, List<Point> t1, List<Point> t2, List<Point> t, float alpha)
@@ -169,10 +222,6 @@ public class FaceMorphing : MonoBehaviour
         MatOfPoint ptList = new MatOfPoint(tRect.ToArray());
         Imgproc.fillConvexPoly(mask, ptList, new Scalar(255.0, 255.0, 255.0), Imgproc.LINE_AA, 0);
 
-        // Debug: Visualize the mask
-        SaveMatAsImage(mask, "mask.png");
-        //Debug.Log("Mask created and filled.");
-
         // Apply warpImage to small rectangular patches
         Mat img1Rect = new Mat(img1, r1);
         Mat img2Rect = new Mat(img2, r2);
@@ -181,17 +230,9 @@ public class FaceMorphing : MonoBehaviour
         Mat warpImage1 = ApplyAffineTransform(img1Rect, t1Rect, tRect, size);
         Mat warpImage2 = ApplyAffineTransform(img2Rect, t2Rect, tRect, size);
 
-        // Debug: Visualize the warped images
-        SaveMatAsImage(warpImage1, "warpImage1.png");
-        SaveMatAsImage(warpImage2, "warpImage2.png");
-
         // Alpha blend rectangular patches
         Mat imgRect = new Mat();
         Core.addWeighted(warpImage1, 1.0 - alpha, warpImage2, alpha, 0.0, imgRect);
-
-        // Debug: Visualize the blended image
-        SaveMatAsImage(imgRect, "blendedImage.png");
-        //Debug.Log("Blended image created.");
 
         // Convert imgRect to 8UC3 for blending
         Mat imgRect8UC3 = new Mat();
@@ -212,10 +253,6 @@ public class FaceMorphing : MonoBehaviour
         Mat inverseMask = new Mat();
         Core.bitwise_not(mask, inverseMask);
 
-        // Debug: Visualize the inverse mask
-        SaveMatAsImage(inverseMask, "inverseMask.png");
-        //Debug.Log("Inverse mask created and filled.");
-
         // Apply the inverse mask to the imgSubMat
         Mat maskedImgSubMat = new Mat();
         Core.bitwise_and(imgSubMat, inverseMask, maskedImgSubMat);
@@ -224,23 +261,8 @@ public class FaceMorphing : MonoBehaviour
         Mat maskedImgRect = new Mat();
         Core.bitwise_and(imgRect8UC3, mask, maskedImgRect);
 
-        // Debug: Visualize the masked images
-        SaveMatAsImage(maskedImgSubMat, "maskedImgSubMat.png");
-        SaveMatAsImage(maskedImgRect, "maskedImgRect.png");
-
         // Add the blended rectangular patch to the output image
         Core.add(maskedImgSubMat, maskedImgRect, imgSubMat);
-
-        //Debug.Log("Final image updated.");
-        index++;
-    }
-
-    int index = 1;
-    // Helper function to save Mat as image
-    private void SaveMatAsImage(Mat mat, string filename)
-    {
-        //filename = $"Debug Images/{index}_{filename}";
-        //Imgcodecs.imwrite(filename, mat);        
     }
 
     public void GenerateMorphSequence(int duration, int frameRate, Mat img1, Mat img2, List<Point> points1, List<Point> points2, List<Tuple<int, int, int>> triList, Size size)
