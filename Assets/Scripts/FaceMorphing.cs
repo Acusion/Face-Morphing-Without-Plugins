@@ -22,6 +22,11 @@ public class FaceMorphing : MonoBehaviour
     public string shapePredictorPath = "shape_predictor_68_face_landmarks.dat";
     private FaceLandmarkDetector faceLandmarkDetector;
 
+    private void Start()
+    {
+        Debug.Log(Application.persistentDataPath);
+    }
+
     private bool InitializeFaceLandmarkDetector()
     {
         string predictorPath = Utils.getFilePath(shapePredictorPath);
@@ -73,9 +78,11 @@ public class FaceMorphing : MonoBehaviour
 
         Mat imgMat1 = new Mat(path1.height, path1.width, CvType.CV_8UC3);
         Utils.texture2DToMat(path1, imgMat1);
+        Imgproc.cvtColor(imgMat1, imgMat1, Imgproc.COLOR_BGR2RGB);
 
         Mat imgMat2 = new Mat(path2.height, path2.width, CvType.CV_8UC3);
         Utils.texture2DToMat(path2, imgMat2);
+        Imgproc.cvtColor(imgMat2, imgMat2, Imgproc.COLOR_BGR2RGB);
 
         (Size size, Mat img1, Mat img2, List<Point> points1, List<Point> points2, List<Point> triList) = faceCorrespondences.GenerateFaceCorrespondences(imgMat1, imgMat2, faceLandmarkDetector);
 
