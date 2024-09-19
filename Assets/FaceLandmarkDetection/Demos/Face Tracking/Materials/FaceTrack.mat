@@ -1,0 +1,175 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 6
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: FaceTrack
+  m_Shader: {fileID: 4800000, guid: 09a3c21d61573cf47bd434ee70fc0e4d, type: 3}
+  m_ShaderKeywords: 
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BakedBlendTex:
+        m_Texture: {fileID: 2800000, guid: 38c111053fd4c9b46b23d23a9ca6307b, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BlendValTex:
+        m_Texture: {fileID: 8600000, guid: 372ecd106d333754e960a2623f265433, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BlinkLeftTex:
+        m_Texture: {fileID: 2800000, guid: a38e30e767ebebc42a2553e61e190715, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BlinkRightTex:
+        m_Texture: {fileID: 2800000, guid: f38957a9ede94084dac3372e347ed5ab, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BrowContourTex:
+        m_Texture: {fileID: 8600000, guid: 9b5ba9a69214bcd4690c3a15dad0e101, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BrowLeftInTex:
+        m_Texture: {fileID: 2800000, guid: 7fa18a23cf4f2b34d8b2cba243846a98, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BrowLeftOutTex:
+        m_Texture: {fileID: 2800000, guid: 2031daba3874cbe45ab245c21f99413b, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BrowRightInTex:
+        m_Texture: {fileID: 2800000, guid: b7073343bbb7c1f4a92f147a992fb9e1, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BrowRightOutTex:
+        m_Texture: {fileID: 2800000, guid: c37d39a0acee6bb4692d70f2b6d29002, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailAlbedoMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailMask:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _DetailNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EmissionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _EyeTex:
+        m_Texture: {fileID: 8600000, guid: 8fe787dfddc97f543b93537ba8ddbb5b, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FaceMeshTex:
+        m_Texture: {fileID: 8600000, guid: fd502bb57bdb5ee47adeca6ff5f0b133, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FacePositions:
+        m_Texture: {fileID: 8600000, guid: fd502bb57bdb5ee47adeca6ff5f0b133, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _FaceRotate:
+        m_Texture: {fileID: 8600000, guid: ce6a69dd1b4f4534fa5fd659c7262299, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _IrisLeftXTex:
+        m_Texture: {fileID: 2800000, guid: 2be3d3c0806096e43bfdb08cbbc3c811, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _IrisLeftYTex:
+        m_Texture: {fileID: 2800000, guid: ae6c39a947452d3459d339613c79298f, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _IrisRightXTex:
+        m_Texture: {fileID: 2800000, guid: a6b28fe784d24564cbae8255e2d310f2, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _IrisRightYTex:
+        m_Texture: {fileID: 2800000, guid: 3400c89bbd3992b40acb449b22b28612, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MaskRotate:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MetallicGlossMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MouthFrownTex:
+        m_Texture: {fileID: 2800000, guid: 6c41708b03f3e9245a2e1a721d25a08b, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MouthOpenTex:
+        m_Texture: {fileID: 2800000, guid: fe3d3987ca1a9f946873123ba218e066, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MouthShrinkTex:
+        m_Texture: {fileID: 2800000, guid: 6fdff110600b4084f89170d0d3a16013, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MouthSmileTex:
+        m_Texture: {fileID: 2800000, guid: a45cfd67a26a82c4bb62aa84b01c4b1f, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _OcclusionMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ParallaxMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _isFace:
+        m_Texture: {fileID: 8600000, guid: 61fe376d7228f684d8fd13c23508fce9, type: 2}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Floats:
+    - _BlinkLeftSlider: 0
+    - _BlinkRightSlider: 0
+    - _BumpScale: 1
+    - _Culling: 2
+    - _Cutoff: 0.5
+    - _DetailNormalMapScale: 1
+    - _DstBlend: 0
+    - _GlossMapScale: 1
+    - _Glossiness: 0.748
+    - _GlossyReflections: 1
+    - _Metallic: 1
+    - _Mode: 0
+    - _MouthOpenSlider: 0
+    - _MouthShrinkSlider: 0
+    - _OcclusionStrength: 1
+    - _Parallax: 0.02
+    - _Smoothness: 0.75
+    - _SmoothnessTextureChannel: 0
+    - _SpecularHighlights: 1
+    - _SrcBlend: 1
+    - _UVSec: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _Color: {r: 1, g: 0.80860585, b: 0.5058824, a: 1}
+    - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
