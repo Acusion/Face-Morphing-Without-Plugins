@@ -51,7 +51,6 @@ namespace FFmpegUnityBind2
 
             if (IsPrintingLog)
             {
-                Debug.Log("Print FFmpeg Log.");
                 callbacksHandlers.Add(new FFmpegCallbacksHandlerDebug());
             }
 

@@ -6,7 +6,7 @@ namespace FFmpegUnityBind2.Internal
     {
         readonly IFFmpegCallbacksHandler handler;
         readonly long executionId;
-        readonly EventType type;
+        public readonly EventType type;
         readonly string message;
 
         public Event(IFFmpegCallbacksHandler handler, long executionId, EventType type, string message = null)

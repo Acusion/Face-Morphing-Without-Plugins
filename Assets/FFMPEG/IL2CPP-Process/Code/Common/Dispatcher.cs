@@ -44,4 +44,10 @@ class Dispatcher : MonoBehaviour
     {
         Instance.actions.Enqueue(action);
     }
+
+    [ContextMenu("Test")]
+    void Test()
+    {
+        Debug.Log(actions.Count);
+    }
 }

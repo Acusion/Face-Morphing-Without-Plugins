@@ -9,6 +9,11 @@ namespace FFmpegUnityBind2.Internal
 
         public static void Invoke(Event @event)
         {
+            if (@event.type == EventType.OnLog)
+            {
+                @event = null;
+                return;
+            }
             events.Enqueue(@event);
         }
 
@@ -16,7 +21,9 @@ namespace FFmpegUnityBind2.Internal
         {
             if (events.Count > 0)
             {
-                events.Dequeue()?.Handle();
+                var ev = events.Dequeue();
+                ev?.Handle();
+                ev = null;
             }
         }
 
@@ -28,6 +35,18 @@ namespace FFmpegUnityBind2.Internal
         void OnDestroy()
         {
             TryExecute();
+        }
+
+        public static void ClearEvents()
+        {
+            events.Clear();
+            
+        }
+
+        [ContextMenu("Test")]
+        void Test()
+        {
+            Debug.Log(events.Count);
         }
     }
 }
