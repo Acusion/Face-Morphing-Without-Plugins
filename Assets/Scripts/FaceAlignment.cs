@@ -54,6 +54,15 @@ public class FaceAlignment : MonoBehaviour
         outputImageViewer.texture = alignedImage;
     }
 
+    public void AlignFace(Texture2D texture)
+    {
+        var landmarksList = visualizer.GetLandmarkPoints(texture).ToList().ConvertAll(v => new Vector2(v.x, v.y));
+        int desiredSize = 1024; 
+
+        var alignedImage = GetAlignedFace(texture, landmarksList, desiredSize, desiredSize, paddingTopRatio, paddingBottomRatio, paddingHorizontalRatio);
+        outputImageViewer.texture = alignedImage;
+    }
+
     public static Texture2D GetAlignedFace(
         Texture2D image,
         List<Vector2> landmarks,
