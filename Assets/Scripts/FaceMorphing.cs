@@ -12,6 +12,7 @@ using OpenCVForUnity.UnityUtils;
 using Debug = UnityEngine.Debug;
 using UnityEngine.Events;
 using DlibFaceLandmarkDetector;
+using OpenCVForUnity.VideoModule;
 
 public class FaceMorphing : MonoBehaviour
 {
@@ -67,6 +68,7 @@ public class FaceMorphing : MonoBehaviour
             Debug.Log($"Morphing between {path1} and {path2}");
 
             DoMorphing(path1, path2);
+            //GenerateFramesWithOpticalFlow(path1, path2, 10, Paths.RESULTS_PATH);
         }
 
         onMorphingCompleted.Invoke();
@@ -89,7 +91,7 @@ public class FaceMorphing : MonoBehaviour
         var tri = new DelaunayTriangulation().MakeDelaunay((int)size.width, (int)size.height, triList, img1, img2);
         //var tri = new DelaunayTriangulation().MakeDelaunay(jsonDelaunay.text);
 
-        GenerateMorphSequence(5, 20, img1, img2, points1, points2, tri, size);
+        GenerateMorphSequence(2, 10, img1, img2, points1, points2, tri, size);
     }
     #endregion
 
@@ -318,6 +320,103 @@ public class FaceMorphing : MonoBehaviour
         var result = texture.EncodeToPNG();
 
         return result;
+    }
+
+    public void GenerateFramesWithOpticalFlow(Texture2D path1, Texture2D path2, int numFrames, string outputFolder)
+    {
+        Mat imgMat1 = new Mat(path1.height, path1.width, CvType.CV_8UC3);
+        Utils.texture2DToMat(path1, imgMat1);
+        Imgproc.cvtColor(imgMat1, imgMat1, Imgproc.COLOR_BGR2RGB);
+
+        Mat imgMat2 = new Mat(path2.height, path2.width, CvType.CV_8UC3);
+        Utils.texture2DToMat(path2, imgMat2);
+        Imgproc.cvtColor(imgMat2, imgMat2, Imgproc.COLOR_BGR2RGB);
+
+        // Convert images to grayscale (if necessary)
+        Mat grayImg1 = new Mat();
+        Mat grayImg2 = new Mat();
+        Imgproc.cvtColor(imgMat1, grayImg1, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.cvtColor(imgMat2, grayImg2, Imgproc.COLOR_BGR2GRAY);
+
+        // Calculate Optical Flow from img1 to img2
+        Mat flow = new Mat();
+        Video.calcOpticalFlowFarneback(grayImg1, grayImg2, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+
+        // Generate intermediate frames
+        for (int i = 0; i <= numFrames; i++)
+        {
+            Mat intermediateFrame = new Mat(imgMat1.size(), imgMat1.type());
+            WarpImageUsingFlow(imgMat1, flow, intermediateFrame, i, numFrames);
+
+            // Save frame to disk
+            Imgcodecs.imwrite(Path.Combine(outputFolder, $"frame_{i:D4}.png"), intermediateFrame);
+        }
+    }
+
+    private void WarpImageUsingFlow(Mat src, Mat flow, Mat dst, int step, int totalSteps)
+    {
+        Mat mapX = new Mat(src.size(), CvType.CV_32FC1);
+        Mat mapY = new Mat(src.size(), CvType.CV_32FC1);
+
+        for (int y = 0; y < src.rows(); y++)
+        {
+            for (int x = 0; x < src.cols(); x++)
+            {
+                // Calculate flow per step without using alpha
+                float flowX = (float)(flow.get(y, x)[0] * (step / (float)totalSteps));
+                float flowY = (float)(flow.get(y, x)[1] * (step / (float)totalSteps));
+
+                float newX = x + flowX;
+                float newY = y + flowY;
+
+                // Ensure newX and newY are within image bounds
+                newX = Mathf.Clamp(newX, 0, src.cols() - 1);
+                newY = Mathf.Clamp(newY, 0, src.rows() - 1);
+
+                // Set map values to direct each pixel to its new location
+                mapX.put(y, x, newX);
+                mapY.put(y, x, newY);
+            }
+        }
+
+        Imgproc.remap(src, dst, mapX, mapY, Imgproc.INTER_LINEAR);
+    }
+
+    private void CreateInterpolatedFrame(Mat img1, Mat img2, Mat flow, float alpha, Mat output)
+    {
+        // Warp img1 and img2 using optical flow
+        Mat warpImage1 = new Mat();
+        Mat warpImage2 = new Mat();
+
+        // Warp img1 towards img2 using optical flow scaled by alpha
+        ApplyFlowWarping(img1, flow, warpImage1, alpha);
+
+        // Warp img2 towards img1 using inverse optical flow scaled by (1 - alpha)
+        ApplyFlowWarping(img2, flow, warpImage2, 1.0f - alpha);
+
+        // Combine the two warped images based on alpha
+        // Instead of using transparency, we'll simply average the warped images
+        Core.addWeighted(warpImage1, 0.5, warpImage2, 0.5, 0.0, output);
+    }
+
+    private void ApplyFlowWarping(Mat src, Mat flow, Mat dst, float scale)
+    {
+        Mat map1 = new Mat(src.size(), CvType.CV_32FC1);
+        Mat map2 = new Mat(src.size(), CvType.CV_32FC1);
+
+        for (int y = 0; y < src.rows(); y++)
+        {
+            for (int x = 0; x < src.cols(); x++)
+            {
+                float flowAtX = (float)(flow.get(y, x)[0] * scale);
+                float flowAtY = (float)(flow.get(y, x)[1] * scale);
+
+                map1.put(y, x, x + flowAtX);
+                map2.put(y, x, y + flowAtY);
+            }
+        }
+
+        Imgproc.remap(src, dst, map1, map2, Imgproc.INTER_LINEAR);
     }
 }
 

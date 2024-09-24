@@ -1,4 +1,6 @@
 using FFmpegUnityBind2;
+using FFmpegUnityBind2.Internal;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -23,6 +25,7 @@ public class VideoCreator : MonoBehaviour, IFFmpegCallbacksHandler
     private void Awake()
     {
         videoPlayer.targetTexture.Release();
+        FFmpeg.IsPrintingLog = false;
     }
 
     private void Start()
@@ -51,55 +54,65 @@ public class VideoCreator : MonoBehaviour, IFFmpegCallbacksHandler
                header[6] == 0x1A && header[7] == 0x0A;
     }
 
+    float startTime;
+    FFmpegProcess process;
     [ContextMenu("Create Video")]
     public void OnMorphongCompleted()
     {
+        startTime = Time.time;
+
         string framePathFormat = Path.Combine(Paths.FRAMES_PATH, "frame_%04d.png");
 
         if (!File.Exists(Paths.WATERMARK_IMAGE_PATH))
             SaveImageToPersistentPath(WaterMarkImage, Paths.WATERMARK_IMAGE_PATH);
 
+        File.Delete(videoFileFullPath);
+
         var imagesToVideoCommandWatermark = new ImagesToVideoWithWatermark(framePathFormat, Paths.WATERMARK_IMAGE_PATH, videoFileFullPath, frameRate, CRF.MAX_QUALITY, watermarkImagePosition, watermarkImageScale, videoSpeed);
-        FFmpeg.Execute(imagesToVideoCommandWatermark.ToString(), _callbacksHandlers);
+        process = FFmpeg.Execute(imagesToVideoCommandWatermark.ToString(), _callbacksHandlers);
     }
 
     public void OnStart(long executionId)
     {
-        Debug.Log($"On Start. Execution Id: {executionId}");
+        //Debug.Log($"On Start. Execution Id: {executionId}");
     }
 
     public void OnLog(long executionId, string message)
     {
-        Debug.Log($"On Log. Execution Id: {executionId}. Message: {message}");
+        //Debug.Log($"On Log. Execution Id: {executionId}");
     }
 
     public void OnWarning(long executionId, string message)
     {
-        Debug.LogWarning($"On Warning. Execution Id: {executionId}. Message: {message}");
+        //Debug.LogWarning($"On Warning. Execution Id: {executionId}. Message: {message}");
     }
 
     public void OnError(long executionId, string message)
     {
-        Debug.LogError($"On Error. Execution Id: {executionId}. Message: {message}");
+        //Debug.LogError($"On Error. Execution Id: {executionId}. Message: {message}");
     }
 
     public void OnCanceled(long executionId)
     {
-        Debug.Log($"On Canceled. Execution Id: {executionId}");
+        //Debug.Log($"On Canceled. Execution Id: {executionId}");
     }
 
     public void OnFail(long executionId)
     {
-        Debug.LogError($"On Fail. Execution Id: {executionId}");
+        //Debug.LogError($"On Fail. Execution Id: {executionId}");
     }
 
     public void OnSuccess(long executionId)
     {
         Debug.Log($"On Success. Execution Id: {executionId}");
-        Debug.Log("completed");
 
         videoPlayer.url = videoFileFullPath;
         videoPlayer.Play();
+        process = null;
+        System.GC.Collect();
+        Debug.Log($"Video created in {Time.time - startTime} seconds");
+
+        EventDispatcher.ClearEvents();
     }
 
     public void Save()
